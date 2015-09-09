@@ -1,0 +1,91 @@
+version = VERSION_NAME
+group = GROUP
+
+install {
+  repositories.mavenInstaller {
+    // This generates POM.xml with proper parameters
+    pom.project {
+      packaging 'aar'
+
+      // Add your description here
+      name POM_NAME
+      description POM_DESCRIPTION
+      url POM_URL
+
+      // Set your license
+      licenses {
+        license {
+          name POM_LICENCE_NAME
+          url POM_LICENCE_URL
+        }
+      }
+      developers {
+        developer {
+          id POM_DEVELOPER_ID
+          name POM_DEVELOPER_NAME
+          email POM_DEVELOPER_EMAIL
+        }
+      }
+      scm {
+        connection POM_SCM_CONNECTION
+        developerConnection POM_SCM_DEV_CONNECTION
+        url POM_SCM_URL
+      }
+    }
+  }
+}
+
+dependencies {
+}
+
+task androidSourcesJar(type: Jar) {
+  from android.sourceSets.main.java.srcDirs
+  classifier = 'sources'
+}
+
+task androidJavadocs(type: Javadoc) {
+  source = android.sourceSets.main.java.srcDirs
+  classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+  if (JavaVersion.current().isJava8Compatible()) {
+    options.addStringOption('Xdoclint:none', '-quiet')
+  }
+}
+
+task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
+  classifier = 'javadoc'
+  from androidJavadocs.destinationDir
+}
+
+artifacts {
+  archives androidSourcesJar
+  archives androidJavadocsJar
+}
+
+apply plugin: 'com.jfrog.bintray'
+
+
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+bintray {
+  user = properties.getProperty("bintray.user")
+  key = properties.getProperty("bintray.apikey")
+
+  configurations = ['archives']
+  pkg {
+    repo = "maven"
+    name = "RxRecyclerView"
+    websiteUrl = 'https://github.com/xfumihiro/RxRecyclerView'
+    vcsUrl = 'https://github.com/xfumihiro/RxRecyclerView.git'
+    licenses = ["Apache-2.0"]
+    publish = true
+    version {
+      desc = "Subset of RxRecyclerView in RxBinding"
+      gpg {
+        sign = true //Determines whether to GPG sign the files. The default is false
+        passphrase = properties.getProperty("bintray.gpg.password")
+        //Optional. The passphrase for GPG signing'
+      }
+    }
+  }
+}
