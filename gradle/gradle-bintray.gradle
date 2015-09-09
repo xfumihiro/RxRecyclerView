@@ -1,0 +1,94 @@
+
+// This is the library version used when deploying the artifact
+version = "0.1.0"
+
+group = "com.github.xfumihiro.rxbinding"                                        // Maven Group ID for the artifact
+
+install {
+  repositories.mavenInstaller {
+    // This generates POM.xml with proper parameters
+    pom.project {
+      packaging 'aar'
+
+      // Add your description here
+      name 'RxRecyclerView'
+      description 'Subset of RxRecyclerView in RxBinding'
+      url 'https://github.com/xfumihiro/RxRecyclerView'
+
+      // Set your license
+      licenses {
+        license {
+          name 'The Apache Software License, Version 2.0'
+          url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+        }
+      }
+      developers {
+        developer {
+          id 'xfumihiro'
+          name 'Fumihiro Xue'
+          email 'xfumihiro@gmail.com'
+        }
+      }
+      scm {
+        connection 'https://github.com/xfumihiro/RxRecyclerView.git'
+        developerConnection 'https://github.com/xfumihiro/RxRecyclerView.git'
+        url 'https://github.com/xfumihiro/RxRecyclerView'
+      }
+    }
+  }
+}
+
+dependencies {
+}
+
+task androidSourcesJar(type: Jar) {
+  from android.sourceSets.main.java.srcDirs
+  classifier = 'sources'
+}
+
+task androidJavadocs(type: Javadoc) {
+  source = android.sourceSets.main.java.srcDirs
+  classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+  if (JavaVersion.current().isJava8Compatible()) {
+    options.addStringOption('Xdoclint:none', '-quiet')
+  }
+}
+
+task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
+  classifier = 'javadoc'
+  from androidJavadocs.destinationDir
+}
+
+artifacts {
+  archives androidSourcesJar
+  archives androidJavadocsJar
+}
+
+apply plugin: 'com.jfrog.bintray'
+
+
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+bintray {
+  user = properties.getProperty("bintray.user")
+  key = properties.getProperty("bintray.apikey")
+
+  configurations = ['archives']
+  pkg {
+    repo = "maven"
+    name = "RxRecyclerView"
+    websiteUrl = 'https://github.com/xfumihiro/RxRecyclerView'
+    vcsUrl = 'https://github.com/xfumihiro/RxRecyclerView.git'
+    licenses = ["Apache-2.0"]
+    publish = true
+    version {
+      desc = "Subset of RxRecyclerView in RxBinding"
+      gpg {
+        sign = true //Determines whether to GPG sign the files. The default is false
+        passphrase = properties.getProperty("bintray.gpg.password")
+        //Optional. The passphrase for GPG signing'
+      }
+    }
+  }
+}
